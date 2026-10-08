@@ -19,7 +19,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            MybillsTheme {
+            MybillsTheme(
+                darkTheme = false,
+                dynamicColor = false
+            ) {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MyBuillsNavHost(modifier = Modifier.fillMaxSize().padding(innerPadding))
                 }

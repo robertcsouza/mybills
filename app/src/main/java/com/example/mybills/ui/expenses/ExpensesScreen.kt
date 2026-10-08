@@ -11,6 +11,36 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.mybills.ui.components.CategoryFilter
+import com.example.mybills.ui.components.ExpenseItem
+import com.example.mybills.ui.components.MonthSelector
+import com.example.mybills.ui.components.MonthlyTotalCard
+import com.example.mybills.ui.components.NewExpenseButton
+import com.example.mybills.ui.expenses.components.ExpsensesHeader
+import java.math.BigDecimal
+import java.text.NumberFormat
+import java.util.Locale
+
+private val categories = listOf(
+    "Todas",
+    "Alimentação",
+    "Transporte",
+    "Moradia",
+    "Lazer",
+    "Saúde",
+    "Outros"
+)
+
+
+private fun formatMoney(amountInCents: Long):String {
+    val formatter = NumberFormat.getCurrencyInstance(
+        Locale("pt","BR")
+    )
+
+    return formatter.format(
+        BigDecimal.valueOf(amountInCents)
+    )
+}
 
 
 @Composable
@@ -24,18 +54,24 @@ fun ExpenseScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "Suas despesas",
-            style = MaterialTheme.typography.headlineMedium
+        ExpsensesHeader()
+        MonthSelector(monthLabel = "Outubro", onPreviousMonth = {}, onNextMonth = {})
+        MonthlyTotalCard(
+            totalInCents = 128_490L,
+            expenseCount = 5
         )
+        CategoryFilter(selectedCategory = "Mercado", onCategorySelected = {}, categories = listOf("Mercado","Combustivel","Cartao"))
 
-        Button(onClick = onNewExpense) {
-            Text("Nova despesa")
-        }
+        ExpenseItem(expense = sampleExpenses[0], onClick = {})
+        ExpenseItem(expense = sampleExpenses[1], onClick = {})
+        NewExpenseButton(onClick = onNewExpense)
 
-        Button(onClick = { onEditExpense(1L) }) {
-            Text("Editar despesa de exemplo")
-        }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ExpensesPreview() {
+    ExpenseScreen(onNewExpense = {}, onEditExpense = {})
 }
 
