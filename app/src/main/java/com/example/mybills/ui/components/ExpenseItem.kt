@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.mybills.ui.expenses.Expense
+import com.example.mybills.domain.Expense
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale

@@ -4,12 +4,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mybills.data.ExpenseDatabaseProvider
+import com.example.mybills.data.ExpenseRepositoryImpl
+import com.example.mybills.domain.categories
+import com.example.mybills.ui.components.CategorySelect
+import com.example.mybills.ui.components.ExpenseDatePicker
 
 @Composable
 fun AddExpenseScreen(
@@ -17,6 +26,19 @@ fun AddExpenseScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
+
+
+    val context = LocalContext.current.applicationContext
+    val database = ExpenseDatabaseProvider.provide(context)
+    val repository = ExpenseRepositoryImpl(database.expenseDao)
+
+    val viewModel = viewModel<AddExpenseViewModel>{
+        AddExpenseViewModel(repository)
+    }
+
+    val uiState = viewModel.uiState
+    val amount = uiState.amount
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -65,16 +87,34 @@ fun AddExpenseScreen(
                 )
 
                 Text(
-                    text = "R$ 0,00",
+                    text = "R$ $amount",
                     style = MaterialTheme.typography.displaySmall
                 )
             }
         }
 
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            readOnly = true,
+            value = amount,
+            onValueChange = viewModel::onAmountChange,
+            modifier = Modifier.fillMaxWidth(),
+            prefix = {
+                Text("R$")
+            },
+            placeholder = {
+                Text("0,00")
+            },
+
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal
+            ),
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp)
+        )
+        OutlinedTextField(
+            value = uiState.description,
+            onValueChange = viewModel ::onDescriptionChange,
+            enabled = true,
+
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Descrição") },
             placeholder = { Text("Ex.: compra no mercado") },
@@ -82,32 +122,12 @@ fun AddExpenseScreen(
             shape = RoundedCornerShape(12.dp)
         )
 
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Categoria") },
-            placeholder = { Text("Selecione uma categoria") },
-            trailingIcon = {
-                Text(
-                    text = "▾",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            shape = RoundedCornerShape(12.dp)
-        )
+        CategorySelect(categories = categories, selectedCategory = uiState.category, onSelectCategory = viewModel::onSelectCategory, enable = true )
 
-        OutlinedTextField(
-            value = "07/10/2026",
-            onValueChange = {},
-            readOnly = true,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Data") },
-            shape = RoundedCornerShape(12.dp),
-            supportingText = {
-                Text("Toque na data para abrir o calendário.")
-            }
+        ExpenseDatePicker(
+            date = uiState.date,
+            onDateSelected = viewModel::onDateChange,
+            enabled = !uiState.isSaving
         )
 
         Text(
@@ -117,7 +137,7 @@ fun AddExpenseScreen(
         )
 
         Button(
-            onClick = {},
+            onClick = { viewModel.saveExpense() },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 54.dp),

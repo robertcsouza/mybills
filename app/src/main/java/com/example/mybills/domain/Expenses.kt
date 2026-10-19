@@ -1,4 +1,4 @@
-package com.example.mybills.ui.expenses
+package com.example.mybills.domain
 
 
 data class Expense(
@@ -8,6 +8,10 @@ data class Expense(
     val category: String,
     val dateLabel: String
 )
+
+
+val categories = listOf<String>("Mercado","Gasolina","Assinaturas","Internet","Cartão","Outros")
+
  val sampleExpenses = listOf(
     Expense(
         id = 1L,
