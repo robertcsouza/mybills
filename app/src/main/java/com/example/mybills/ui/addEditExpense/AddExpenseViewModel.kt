@@ -7,9 +7,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mybills.data.ExpenseRepository
 import kotlinx.coroutines.launch
+import kotlin.coroutines.cancellation.CancellationException
 
 
 class AddExpenseViewModel(private val repository: ExpenseRepository): ViewModel(){
+
+
 
 
     var uiState by mutableStateOf(AddExpenseUiState())
@@ -43,17 +46,50 @@ class AddExpenseViewModel(private val repository: ExpenseRepository): ViewModel(
     }
 
 
+    val amountInCents = uiState.amount
+        .replace(',', '.')
+        .toBigDecimalOrNull()
+
     fun saveExpense(){
-        print(uiState.toString())
-        println("teste")
-//        viewModelScope.launch {
-//            repository.insert(description = "testing insert",
-//                amountInCents = 100,
-//                category = "Mercado",
-//                dataLabel = "07/10/2026",
-//                id = 1
-//            )
-//        }
+
+
+        val cents = try {
+            uiState.amount
+                .replace(',', '.')
+                .toBigDecimalOrNull()
+                ?.movePointRight(2)
+                ?.longValueExact()
+        } catch (_: ArithmeticException) {
+            null
+        }
+
+        if (cents == null || cents <= 0) {
+            uiState = uiState.copy(
+                error = "Informe um valor maior que zero."
+            )
+            return
+        }
+
+
+        if(uiState.isSaving || uiState.saved) return
+        uiState =  uiState.copy(isSaving = false, saved = true)
+        try {
+            viewModelScope.launch {
+                repository.insert(
+                    description = uiState.description,
+                    amountInCents = cents,
+                    category = uiState.category,
+                    dataLabel = uiState.date
+                )
+            }
+        }catch (exception: CancellationException){
+            throw exception
+        }catch (_: Exception){
+            uiState.copy(
+                isSaving = false,
+                error = "Não foi possivel salvar a despesa"
+            )
+        }
     }
 
 }

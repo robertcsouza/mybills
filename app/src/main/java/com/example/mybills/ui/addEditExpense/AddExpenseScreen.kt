@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,12 +34,19 @@ fun AddExpenseScreen(
     val database = ExpenseDatabaseProvider.provide(context)
     val repository = ExpenseRepositoryImpl(database.expenseDao)
 
+
     val viewModel = viewModel<AddExpenseViewModel>{
         AddExpenseViewModel(repository)
     }
 
     val uiState = viewModel.uiState
     val amount = uiState.amount
+
+    LaunchedEffect(uiState.saved) {
+        if(uiState.saved){
+            onBack()
+        }
+    }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -137,16 +145,20 @@ fun AddExpenseScreen(
         )
 
         Button(
-            onClick = { viewModel.saveExpense() },
+            onClick = viewModel::saveExpense,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 54.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
             Text(
-                text = "Adicionar despesa",
+                text = if(uiState.isSaving){"Salvando"}else{
+                    "Adicionar despesa"
+                },
                 style = MaterialTheme.typography.labelLarge
             )
         }
+
+        uiState.error?.let { message-> Text(message) }
     }
 }
